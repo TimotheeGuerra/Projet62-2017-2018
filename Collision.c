@@ -1,4 +1,4 @@
-#include "Fonctions.h"
+#include "Fonctions.h" ok
 
 int CollisionCercles(Cercle C1,Cercle C2){
    int d2=(C1.x-C2.x)*(C1.x-C2.x)+(C1.y-C2.y)*(C1.y-C2.y); //distance au carre entre les centres des deux cercles
