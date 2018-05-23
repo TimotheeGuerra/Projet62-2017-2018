@@ -1,6 +1,6 @@
 #include "Fonctions.h"
 
-void mise_a_zero_input(Input* in){
+void mise_a_zero_input(INPUT* in){
     //met a 0 (ie non utilise) toutes les cases du tableau des events
     int i,j;
     for(i=0;i<SDL_NUM_SCANCODES;i++){
@@ -30,7 +30,7 @@ void mise_a_zero_input(Input* in){
     in->quit=0;
 }
 
-void UpdateEventsP(Input* in){
+void UpdateEventsP(INPUT* in){
 	in->mousexrel=0; //pour eviter des mouvements fictifs de la souris
 	in->mouseyrel=0;
 
@@ -40,7 +40,7 @@ void UpdateEventsP(Input* in){
 	}
 }
 
-void UpdateEventsW(Input* in){
+void UpdateEventsW(INPUT* in){
     in->mousexrel=0; //pour eviter des mouvements fictifs de la souris
 	in->mouseyrel=0;
 
@@ -49,7 +49,7 @@ void UpdateEventsW(Input* in){
     GestionEvents(in,event);
 }
 
-void GestionEvents(Input *in, SDL_Event event){
+void GestionEvents(INPUT *in, SDL_Event event){
     switch (event.type){ //de quel type est l'evenement regarde
     case SDL_KEYDOWN: //on a presse sur une touche du clavier
         in->key[event.key.keysym.scancode]=1; //on recupere laquelle c'est et on met a 1 sa case
