@@ -6,6 +6,7 @@
 #define APPARITION_MAX 40000 //equivalent a 40s
 
 
+
 void init_position_cerise(SDL_Rect* positionV,POSITION* voiture,SDL_Rect *cerise,int i){
     //initialise tout ce qui doit l'etre pour cette trame
     cerise->x=0;cerise->y=0;
@@ -13,43 +14,60 @@ void init_position_cerise(SDL_Rect* positionV,POSITION* voiture,SDL_Rect *cerise
     voiture->x=200+100*i;voiture->y=400;
 }
 
-void deroulement_cerise_joystick(CONTEXT C,int* precedent){
-    SDL_Rect positionV[C.nbjoueur],positionCerise,positionCoupe; //les positions des differents objets dont la SDL a besoin pour l'affichage
-    POSITION voiture[C.nbjoueur]; //contient toutes les donnees utiles sur les voitures
+void deroulement_cerise_joystick(CONTEXT *C,int* precedent){
+    SDL_Rect positionV[C->nbjoueur],positionCerise,positionCoupe,positionGagnant; //les positions des differents objets dont la SDL a besoin pour l'affichage
+    POSITION voiture[C->nbjoueur]; //contient toutes les donnees utiles sur les voitures
 
     int i,pause=0,option=0,collision=0;
     int temps_actuel=0,temps_precedent=0,temps_cerise=0,temps_cerise_doree=0,temps_alea=0; //tous les differents temps dont on a besoin
-    int score[C.nbjoueur]; for(i=0;i<C.nbjoueur;i++) score[i]=0; //tableau des scores des joueurs initialise a 0
+    int score[C->nbjoueur]; for(i=0;i<C->nbjoueur;i++) score[i]=0; //tableau des scores des joueurs initialise a 0
     int prise[NB_CERISE]; for(i=0;i<NB_CERISE;i++) prise[i]=1; //prise[i]=1 si la cerise i a ete prise (elle ne sera donc plus affiche pendant un certain temps), 0 sinon
-    double angle_voulu=0,rot_graphique[C.nbjoueur]; //les differents angles dont on a besoin
+    double angle_voulu=0,rot_graphique[C->nbjoueur]; //les differents angles dont on a besoin
 
-    for(i=0;i<C.nbjoueur;i++){ //initialisation
+    for(i=0;i<C->nbjoueur;i++){ //initialisation
         InitVoiture(voiture+i);
         init_position_cerise(positionV+i,voiture+i,&positionCerise,i);
     }
+    for(i=0;i<C->nbjoueur;i++){
+        EgalisationManette(&(voiture[i].manette),C->manette[i]);
+    }
 
-    for(i=0;i<C.nbjoueur;i++){ //recuperation de la taille des textures de voitures
-        SDL_QueryTexture(C.T_voiture[i], NULL, NULL, &(positionV[i].w), &(positionV[i].h));
+    for(i=0;i<C->nbjoueur;i++){ //recuperation de la taille des textures de voitures
+        SDL_QueryTexture(C->T_voiture[i], NULL, NULL, &(positionV[i].w), &(positionV[i].h));
         voiture[i].h=positionV[i].h;
         voiture[i].w=positionV[i].w;
     }
 
     //recuperation des textures des autres objets
-    SDL_QueryTexture(C.T_element[ELEMENT_CERISE], NULL, NULL, &(positionCerise.w), &(positionCerise.h));
-    SDL_QueryTexture(C.T_element[ELEMENT_TROPHEE], NULL, NULL, &(positionCoupe.w), &(positionCoupe.h));
-    positionCoupe.x=(C.Xres-positionCoupe.w)/2;   positionCoupe.y=(C.Yres-positionCoupe.h)/2;
+    SDL_QueryTexture(C->T_element[ELEMENT_CERISE], NULL, NULL, &(positionCerise.w), &(positionCerise.h));
+    SDL_QueryTexture(C->T_element[ELEMENT_TROPHEE], NULL, NULL, &(positionCoupe.w), &(positionCoupe.h));
+    SDL_QueryTexture(C->T_voiture[0], NULL, NULL, &(positionGagnant.w), &(positionGagnant.h));
+    positionCoupe.x=(C->Xres-positionCoupe.w)/2;   positionCoupe.y=(C->Yres-positionCoupe.h)/2;
+    positionGagnant.x=positionCoupe.x+MILIEU_COUPE_X-positionGagnant.w/2;
+    positionGagnant.y=positionCoupe.y+MILIEU_COUPE_Y-positionGagnant.h/2;
 
-    Input in; //tableau contenant tous les evenements utiles
+    INPUT in; //tableau contenant tous les evenements utiles
     mise_a_zero_input(&in); //mise a 0 de tous ces evenements
 
     temps_alea=rand_a_b(APPARITION_MIN,APPARITION_MAX); //temps_alea est compris entre deu valeurs de temps
     while(!in.key[SDL_SCANCODE_ESCAPE]){ //tant qu'on a pas appuye sur la touche echap
-        for(i=0;i<C.nbjoueur;i++){ //regarde si un joueur a atteint le score max
+        for(i=0;i<C->nbjoueur;i++){ //regarde si un joueur a atteint le score max
             if(score[i]>=SCORE_MAX_CERISE){//si oui,affiche la coupe et retourne au menu jeu
-                SDL_RenderCopy(C.sdlRenderer,C.T_element[ELEMENT_TROPHEE],NULL,&positionCoupe);
-                SDL_RenderPresent(C.sdlRenderer); //rafraichit l'ecran
-                SDL_Delay(3000); //attente de 3s
+                Mix_Pause(-1); //met en pause tous les canaux
+
+                SDL_RenderClear(C->sdlRenderer); //destruction de l'ancienne ecran
+                SDL_AffichageScore(*C,score); //fonction creee permettant d'afficher les scores grâces a des images BMP
+                SDL_RenderCopy(C->sdlRenderer,C->T_element[ELEMENT_TROPHEE],NULL,&positionCoupe);
+                SDL_RenderCopy(C->sdlRenderer,C->T_voiture[i],NULL,&positionGagnant);
+                SDL_RenderPresent(C->sdlRenderer); //rafraichit l'ecran
+
+                Mix_VolumeChunk(C->sons[SON_VICTOIRE],MIX_MAX_VOLUME); //definie le volume sonore pour le son
+                Mix_PlayChannel(CANAL_VICTOIRE, C->sons[SON_VICTOIRE], 0);
+                SDL_Delay(4000); //attente de 4s
                 *precedent=3;
+                for(i=0;i<C->nbjoueur;i++){
+                    EgalisationManette(&(C->manette[i]),voiture[i].manette);
+                }
                 return;
             }
         }
@@ -64,7 +82,7 @@ void deroulement_cerise_joystick(CONTEXT C,int* precedent){
                 prise[1]=1;
                 prise[0]=0;
 
-                int X=rand_a_b(50,C.Xres-50), Y=rand_a_b(50,C.Yres-50); //on affecte une nouvelle position aleatoire a la cerise
+                int X=rand_a_b(50,C->Xres-50), Y=rand_a_b(50,C->Yres-50); //on affecte une nouvelle position aleatoire a la cerise
                 positionCerise.x=X; positionCerise.y=Y;
 
                 if(temps_actuel-temps_cerise_doree>temps_alea){ //si on a attendu un temps superieur au temps aleatoire d'attente de la cerise doree
@@ -77,15 +95,18 @@ void deroulement_cerise_joystick(CONTEXT C,int* precedent){
             }
 
             //gestion de toutes les voitures une par une
-            for(i=0;i<C.nbjoueur;i++){
+            for(i=0;i<C->nbjoueur;i++){
 
                 //gestion des instructions
-                gestion_instruction_joystick(&C,&in,voiture+i,&angle_voulu,i,&pause); //on gere les demandes de l'utilisateur de la voiture
+                gestion_instruction_joystick(C,&in,voiture+i,&angle_voulu,i,&pause); //on gere les demandes de l'utilisateur de la voiture
                 if(pause==1){ //si il a appuye sur start.
                     Mix_Pause(-1); //Met en pause tous les canaux
                     pause=0;
-                    MenuPause(C,precedent,&option,i); //gestion du menu pause
+                    MenuPause(C,voiture+i,precedent,&option,i); //gestion du menu pause
                     if(*precedent!=0){ //il a demande a quitter le jeu
+                        for(i=0;i<C->nbjoueur;i++){
+                            EgalisationManette(&(C->manette[i]),voiture[i].manette);
+                        }
                         return;
                     }
                     *precedent=3;
@@ -93,13 +114,13 @@ void deroulement_cerise_joystick(CONTEXT C,int* precedent){
                 }
 
                 //gestion de la physique liee a une voiture
-                gestion_globale_voiture(C,voiture+i,positionV+i,rot_graphique+i,angle_voulu,i);
+                gestion_globale_voiture(*C,voiture+i,positionV+i,rot_graphique+i,angle_voulu,i);
 
                 //gestion de toutes les collisions
-                if(percute_bord_joystick(C,voiture+i)){
-                    gestion_bruit_rebond(C,voiture,i);
+                if(percute_bord_joystick(*C,voiture+i)){
+                    gestion_bruit_rebond(*C,voiture,i);
                 }
-                if(voiture[i].saut.etat==0){ //si on ne saute pas, on peut percuter des objets
+                if(voiture[i].saut.etat!=1){ //si on ne saute pas, on peut percuter des objets
                     if(prise[0]==0||prise[1]==0){ //si la cerise n'a pas ete prise, on teste si elle va l'etre
                         if(percute_objet_joystick(voiture[i],positionCerise)){
                             prise[0]=1;
@@ -110,10 +131,10 @@ void deroulement_cerise_joystick(CONTEXT C,int* precedent){
                             }
                         }
                     }
-                    for(int j=0;j<C.nbjoueur;j++){
+                    for(int j=0;j<C->nbjoueur;j++){
                         if(j!=i){
                             if(percute_voiture_joystick(voiture+i,voiture+j,&collision)){
-                                gestion_bruit_crash(C, voiture+i, i);
+                                gestion_bruit_crash(*C, voiture+i, i);
                             }
                         }
                     }
@@ -130,25 +151,29 @@ void deroulement_cerise_joystick(CONTEXT C,int* precedent){
             temps_precedent=temps_actuel;
 
             //affichage a l'ecran de toutes les images et tous les textes
-            SDL_UpdateTexture(C.sdlTexture, NULL, C.ecran->pixels, C.ecran->pitch);
-            SDL_RenderClear(C.sdlRenderer); //destruction de l'ancienne ecran
+            SDL_UpdateTexture(C->sdlTexture, NULL, C->ecran->pixels, C->ecran->pitch);
+            SDL_RenderClear(C->sdlRenderer); //destruction de l'ancienne ecran
 
-            SDL_AffichageScore(C,score); //fonction creee permettant d'afficher les scores gr�ces a des images BMP
-            SDL_RenderCopy(C.sdlRenderer, C.T_circuit[0], NULL, NULL); //copie du relief
+            SDL_AffichageScore(*C,score); //fonction creee permettant d'afficher les scores grâces a des images BMP
+            SDL_RenderCopy(C->sdlRenderer, C->T_circuit[0], NULL, NULL); //copie du relief
             for(i=0;i<NB_CERISE;i++){
                 if(prise[i]==0){ //si la cerise n'a pas ete prise, il faut l'afficher
-                    SDL_RenderCopy(C.sdlRenderer, C.T_element[ELEMENT_CERISE+i], NULL, &positionCerise);
+                    SDL_RenderCopy(C->sdlRenderer, C->T_element[ELEMENT_CERISE+i], NULL, &positionCerise);
                 }
             }
-            for(i=0;i<C.nbjoueur;i++){ //affichage de toutes les voitures
-                SDL_RenderCopyEx(C.sdlRenderer,C.T_voiture[i],NULL,&positionV[i],rot_graphique[i],NULL,SDL_FLIP_NONE); //fait tourner la texture dans le sens horaire.
+            for(i=0;i<C->nbjoueur;i++){ //affichage de toutes les voitures
+                SDL_RenderCopyEx(C->sdlRenderer,C->T_voiture[i],NULL,&positionV[i],rot_graphique[i],NULL,SDL_FLIP_NONE); //fait tourner la texture dans le sens horaire.
             }
-            SDL_RenderPresent(C.sdlRenderer); //rafraichit l'ecran
+            SDL_RenderPresent(C->sdlRenderer); //rafraichit l'ecran
         }
 
         else{ //si on a pas attendu suffisament, on endort le programme pour eviter qu'il ne consomme 100% du CPU
             SDL_Delay(TEMPS-(temps_actuel-temps_precedent));
         }
+    }
+
+    for(i=0;i<C->nbjoueur;i++){
+        EgalisationManette(&(C->manette[i]),voiture[i].manette);
     }
 }
 
