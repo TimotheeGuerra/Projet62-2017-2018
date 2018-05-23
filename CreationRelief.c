@@ -2,7 +2,7 @@
 
 int** creeMatricePyramideCentrale(int nl, int nc, int niveau_sol, int niveau_pyramide, int pente_pyramide) {
 	int i, j;
-	int** matrice = alloueMatriceInt(nl, nc);
+	int** matrice = alloueMatriceSanskinect(nl, nc);
 	if (niveau_pyramide > niveau_sol)
 	{
 		for (i = 0; i < nl; i++)
@@ -28,7 +28,7 @@ int** creeMatricePyramideCentrale(int nl, int nc, int niveau_sol, int niveau_pyr
 	return matrice;
 }
 
-/*int** alloueMatriceInt(int nl, int nc) {
+int** alloueMatriceSanskinect(int nl, int nc) {
 	int** p = NULL;
 	int i;
 	p =(int**) calloc(nl, sizeof(*p));
@@ -46,9 +46,9 @@ int** creeMatricePyramideCentrale(int nl, int nc, int niveau_sol, int niveau_pyr
 	}
 	for (i = 1; i < nl; i++) p[i] = p[i-1] + nc;
 	return p;
-}*/
+}
 
-void libereMatriceInt(int** matrice) {
+void libereMatriceSansKinect(int** matrice) {
 	free(*matrice);
 	free(matrice);
 }
