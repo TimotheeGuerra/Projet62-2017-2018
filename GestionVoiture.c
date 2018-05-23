@@ -74,7 +74,7 @@ void calcul_vitesse_joystick(POSITION *voiture,double F_pente, double F_frotteme
         if(abs_double(voiture->vitesse)<0.1){
             voiture->vitesse=0;
             if(virage>0){
-                voiture->rotation+=40; //on ajoute veritablement les 40° a la voiture pour quelle continue sur sa lancee
+                voiture->rotation+=40; //on ajoute veritablement les 40Â° a la voiture pour quelle continue sur sa lancee
             }
             else{
                 voiture->rotation-=40;
@@ -116,11 +116,11 @@ void calcul_position_joystick(POSITION* voiture){
 }
 
 int calcul_saut_joystick(CONTEXT C,POSITION *voiture, double beta, SDL_Rect *positionV){
-    Point centre, avant;
+    POINT centre, avant;
     avant.x=positionV->x+voiture->w/2;  avant.y=positionV->y;
     centre.x=positionV->x+voiture->w/2; centre.y=positionV->y+voiture->h/2;
     int x,y;
-    if(voiture->rebondi==1||voiture->compteur_rebond!=0){ //si on rebondi on ne saute pas.
+    if(voiture->rebondi!=0||voiture->compteur_rebond!=0){ //si on rebondi on ne saute pas.
         voiture->saut.etat=0;
         voiture->alpha=beta;
         positionV->h=voiture->h;
@@ -139,7 +139,7 @@ int calcul_saut_joystick(CONTEXT C,POSITION *voiture, double beta, SDL_Rect *pos
         else{ //sinon on peut possiblement sauter
             int temps_actuel;
             double t_saut=(2*voiture->vitesse/G)*(sin(voiture->alpha)-tan(beta)*cos(voiture->alpha));
-            if(t_saut>1.5){ //la duree du saut excede 1s, on le prend donc en compte
+            if(t_saut>TEMPS_SAUT_MIN){ //la duree du saut excede 1s, on le prend donc en compte
                 temps_actuel=SDL_GetTicks();
                 voiture->saut.etat=1;
                 voiture->saut.debut_saut=temps_actuel;
@@ -215,8 +215,8 @@ double calcul_zoom(POSITION voiture, int temps_actuel){
 }
 
 int percute_bord_joystick(CONTEXT C,POSITION *voiture){
-    Point HG,HD,BD,BG; //poitn Haut Gauche, Haut Droit ...
-    Cercle V;
+    POINT HG,HD,BD,BG; //poitn Haut Gauche, Haut Droit ...
+    CERCLE V;
     //attribution des coordonnees des sommets de l'ecran
     HG.x=0;        HG.y=0;
     HD.x=C.Xres-1; HD.y=0;
@@ -227,6 +227,8 @@ int percute_bord_joystick(CONTEXT C,POSITION *voiture){
     if(voiture->vitesse!=0){ //si la vitesse n'est pas nulle
         if(CollisionDroiteCercle(HG,HD,V)==1){ //collision avec le cote du haut
             voiture->y=0;
+            voiture->rebondi=-1;
+            voiture->compteur_rebond=1;
             if(voiture->vitesse>0){
                 //attribution d'une nouvelle rotation a la voiture pour qu'elle rebondisse
                 if(voiture->rotation>=270&&voiture->rotation<=360){
@@ -241,7 +243,7 @@ int percute_bord_joystick(CONTEXT C,POSITION *voiture){
             else{
                 voiture->rotation=180-voiture->rotation;
             }
-            if(abs_double(voiture->vitesse)>VITESSE_MAX){ //empeche la vitesse de monter trop haut grâce au mur
+            if(abs_double(voiture->vitesse)>VITESSE_MAX){ //empeche la vitesse de monter trop haut grÃ¢ce au mur
                 voiture->vitesse=VITESSE_MAX*abs_double(voiture->vitesse)/voiture->vitesse;
             }
             return 1;
@@ -312,7 +314,7 @@ int percute_mur(CONTEXT C,POSITION *voiture, double beta, int joueur){
 }
 
 int percute_voiture_joystick(POSITION *voiture1,POSITION *voiture2,int *collision){
-    Cercle V1,V2;
+    CERCLE V1,V2;
     DefinitionCercle(&V1,*voiture1);
     DefinitionCercle(&V2,*voiture2);
 
@@ -336,13 +338,13 @@ int percute_voiture_joystick(POSITION *voiture1,POSITION *voiture2,int *collisio
     double Cos1=cos(M_PI*fictive1.rotation/180), Sin1=sin(M_PI*fictive1.rotation/180);
     double Cos2=cos(M_PI*fictive2.rotation/180), Sin2=sin(M_PI*fictive2.rotation/180);
 
-    Point centre1,centre2;
+    POINT centre1,centre2;
     centre1.x=fictive1.x+fictive1.w/2; centre1.y=fictive1.y+fictive1.h/2;
     centre2.x=fictive2.x+fictive2.w/2; centre2.y=fictive2.y+fictive2.h/2;
 
     int diametre=PGCD(voiture1->h,voiture1->w);
-    Cercle approx1[voiture1->h/diametre][voiture1->w/diametre];
-    Cercle approx2[voiture2->h/diametre][voiture2->w/diametre];
+    CERCLE approx1[voiture1->h/diametre][voiture1->w/diametre];
+    CERCLE approx2[voiture2->h/diametre][voiture2->w/diametre];
 
     //decomposition des rectangles en un certain nombre de cercles
     for(int i=0;i<voiture1->h/diametre;i++){
@@ -392,7 +394,7 @@ int percute_voiture_joystick(POSITION *voiture1,POSITION *voiture2,int *collisio
 
 int percute_objet_joystick(POSITION voiture,SDL_Rect Objet){
     //definition du cercle de collision de l'objet
-    Cercle C;
+    CERCLE C;
     C.x=(int)(Objet.x+Objet.w/2);  C.y=(int)(Objet.y+Objet.h/2);
     C.rayon=(int)(Objet.h/2);
 
@@ -406,15 +408,15 @@ int gestion_derapage(POSITION *voiture, double virage, double *rot_graphique){
     if(voiture->derapage==1){ //si la voiture est entrain de deraper
         if(voiture->derapage_av==1){ //si elle derapait deja avant
             if(virage>0){ //si on tourne vers la droite
-                *rot_graphique+=40; //on ajoute 40° au graphisme de la voiture par rapport a l'angle de la voiture
+                *rot_graphique+=40; //on ajoute 40Â° au graphisme de la voiture par rapport a l'angle de la voiture
             }
             else if(virage<0){ //si on tourne vers la droite
-                *rot_graphique-=40; //on retranche 40°
+                *rot_graphique-=40; //on retranche 40Â°
             }
         }
         else{ //si on ne derapait pas avant
             if(virage>0){
-                *rot_graphique+=20; //on n'ajoute que 20° (decomposition du virage)
+                *rot_graphique+=20; //on n'ajoute que 20Â° (decomposition du virage)
             }
             else if(virage<0){
                 *rot_graphique-=20;
@@ -425,7 +427,7 @@ int gestion_derapage(POSITION *voiture, double virage, double *rot_graphique){
     else{ //si on ne derape pas
         if(voiture->derapage_av==1){ //si on derapait avant
             if(virage>0){
-                voiture->rotation+=40; //on ajoute veritablement les 40° a la voiture pour quelle continue sur sa lancee
+                voiture->rotation+=40; //on ajoute veritablement les 40Â° a la voiture pour quelle continue sur sa lancee
                 *rot_graphique=voiture->rotation;
             }
             else if(virage<0){
@@ -445,13 +447,51 @@ int gestion_derapage(POSITION *voiture, double virage, double *rot_graphique){
     }
 }
 
+double force_pente_joystick(CONTEXT C,POSITION *voiture, double *beta){
+    int xf,xi,yf,yi;
+    POINT Avant, Arriere, Centre; //position de la partie avant et arriÃ¨re de la voiture
+    double Force;
+    Avant.x=voiture->x+voiture->w/2;
+    Avant.y=voiture->y;
+    Arriere.x=voiture->x+voiture->w/2;
+    Arriere.y=voiture->y+voiture->h;
+    Centre.x=voiture->x+voiture->w/2;
+    Centre.y=voiture->y+voiture->h/2;
+
+    PointApresRotation(&Avant,Centre,voiture->rotation);
+    PointApresRotation(&Arriere,Centre,voiture->rotation);
+
+    xf=(int)Avant.x;   yf=(int)Avant.y;
+    xi=(int)Arriere.x; yi=(int)Arriere.y;
+    securite_overflowX(C,&xi); securite_overflowY(C,&yi);
+    securite_overflowX(C,&xf); securite_overflowY(C,&yf);
+
+    //Calcul de beta angle de ma pente juste devant la voiture
+    *beta= atan2((C.relief[yf][xf]-C.relief[yi][xi]),sqrt((xf-xi)*(xf-xi)+(yf-yi)*(yf-yi)));
+
+    if(*beta-voiture->alpha>RUPTURE_PENTE_MAX){
+        voiture->rebondi=1;
+    }
+
+    Force=-MASSE*G*sin(*beta)*cos(*beta);
+    return Force*3; //le coef 3 est lÃ  pour rendre la force non negligeable
+}
+
+double force_frottement_solide(POSITION voiture){
+    if(abs(voiture.vitesse)>0.01){
+        double Cos=cos(voiture.alpha);
+        return signe(voiture.vitesse)*FROTTEMENT_SOLIDE*MASSE*G*Cos*Cos;
+    }
+    return 0;
+}
+
 void gestion_globale_voiture(CONTEXT C,POSITION *voiture,SDL_Rect *positionV,double *rot_graphique,double angle_voulu, int joueur){
     double F_pente=0,F_frottement_solide=0,virage=0,beta=0;
     //virage=constante qu'on rajoute a l'angle actuel de la voiture pour quelle atteigne l'angle_voulue
     //beta=angle de la pente devant la voiture
 
     *rot_graphique=voiture->rotation;
-    F_pente=force_pente_joystick_bis(C,voiture,&beta); //beta=angle de la pente
+    F_pente=force_pente_joystick(C,voiture,&beta); //beta=angle de la pente
     percute_mur(C,voiture,beta,joueur);
     if(!calcul_saut_joystick(C,voiture,beta,positionV)){ //on ne saute pas
         F_frottement_solide=force_frottement_solide(*voiture);
