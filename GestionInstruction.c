@@ -2,7 +2,7 @@
 
 
 
-int gestion_position_joueur(Input *in, POSITION *voiture, int numero){
+int gestion_position_joueur(INPUT *in, POSITION *voiture, int numero){
     if(in->joyhat[numero][SDL_HAT_DOWN]){
         voiture->position_joueur=DERRIERE;
         in->joyhat[numero][SDL_HAT_DOWN]=0;
@@ -210,7 +210,7 @@ void gestion_droite(POSITION *voiture, double *angle_voulu, int x, int y){
     }
 }
 
-void gestion_instruction_joystick(CONTEXT *C,Input *in,POSITION *voiture,double* angle_voulu,int numero,int* pause){
+void gestion_instruction_joystick(CONTEXT *C,INPUT *in,POSITION *voiture,double* angle_voulu,int numero,int* pause){
     int x,y;
     int force;
     if(in->joyadded){ //un joystick a ete rajoute
@@ -232,18 +232,18 @@ void gestion_instruction_joystick(CONTEXT *C,Input *in,POSITION *voiture,double*
         in->joybutton[numero][START]=0;
     }
 
-    if(in->joybutton[numero][BA]){ //Est ce que l'utilisateur a presse le Bouton A, veut-il freiner ?
+    if(in->joybutton[numero][voiture->manette.commande_jeu[COMMANDE_J_FRE]]){ //Est ce que l'utilisateur a presse le Bouton A, veut-il freiner ?
         voiture->freinage=1;
         voiture->force_moteur=0;
         //in->joybutton[0][0]=0;
     }
 
     //recuperation de la force_moteur demande par l'utilisateur
-    if(in->joyaxes[numero][R2].utilise==0&&in->joyaxes[numero][R2].valeur==0){//securite pour le debut du jeu ou les axes sont a 0 et pas a -32768
+    if(in->joyaxes[numero][voiture->manette.commande_jeu[COMMANDE_J_ACC]-100].utilise==0&&in->joyaxes[numero][voiture->manette.commande_jeu[COMMANDE_J_ACC]-100].valeur==0){//securite pour le debut du jeu ou les axes sont a 0 et pas a -32768
         voiture->force_moteur=0;
     }
     else{
-        force=in->joyaxes[numero][R2].valeur; //on recupere la valeur de l'axe 5 de la manette de l'utilisateur
+        force=in->joyaxes[numero][voiture->manette.commande_jeu[COMMANDE_J_ACC]-100].valeur; //on recupere la valeur de l'axe 5 de la manette de l'utilisateur
         if(force==VALEUR_J_MIN){ //l'utilisateur n'accelere pas
             voiture->force_moteur=0;
         }
@@ -254,11 +254,11 @@ void gestion_instruction_joystick(CONTEXT *C,Input *in,POSITION *voiture,double*
     }
 
     if(voiture->force_moteur==0){ //si la voiture n'avance pas, peut-etre que l'utilisateur veut reculer
-        if(in->joyaxes[numero][L2].utilise==0&&in->joyaxes[numero][L2].valeur==0){ //securite
+        if(in->joyaxes[numero][voiture->manette.commande_jeu[COMMANDE_J_REC]-100].utilise==0&&in->joyaxes[numero][voiture->manette.commande_jeu[COMMANDE_J_REC]-100].valeur==0){ //securite
             voiture->force_moteur=0;
         }
         else{
-            force=in->joyaxes[numero][L2].valeur;
+            force=in->joyaxes[numero][voiture->manette.commande_jeu[COMMANDE_J_REC]-100].valeur;
             if(force==VALEUR_J_MIN){
                 voiture->force_moteur=0;
             }
@@ -270,13 +270,13 @@ void gestion_instruction_joystick(CONTEXT *C,Input *in,POSITION *voiture,double*
     }
 
 
-    if(!in->joybutton[numero][R1]){ //on ne veut pas deraper
+    if(!in->joybutton[numero][voiture->manette.commande_jeu[COMMANDE_J_DER]]){ //on ne veut pas deraper
         if(voiture->derapage==0){
             voiture->derapage_av=0;
         }
         voiture->derapage=0;
     }
-    else if(in->joybutton[numero][R1]){ //l'utilisateur veut deraper
+    else if(in->joybutton[numero][voiture->manette.commande_jeu[COMMANDE_J_DER]]){ //l'utilisateur veut deraper
         if(voiture->derapage==1){ //si on etait deja entrain de deraper
             voiture->derapage_av=1; //on le signale
         }
@@ -286,9 +286,9 @@ void gestion_instruction_joystick(CONTEXT *C,Input *in,POSITION *voiture,double*
         voiture->derapage=1;
     }
 
-    //on recupere les informations du joystick 1 de la manette de l'utilisateur
-    x=in->joyaxes[numero][L3_HZ].valeur;
-    y=in->joyaxes[numero][L3_VT].valeur;
+    //on recupere les informations du joystick fait pour tourner de la manette de l'utilisateur
+    x=in->joyaxes[numero][voiture->manette.commande_jeu[COMMANDE_J_TOU]-101].valeur; //axe horizontale
+    y=in->joyaxes[numero][voiture->manette.commande_jeu[COMMANDE_J_TOU]-100].valeur; //axe verticale
 
     //on les traduit en un angle comprehensible par l'ordinateur
     if(voiture->vitesse!=0){
