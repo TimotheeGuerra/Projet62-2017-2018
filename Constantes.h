@@ -1,6 +1,21 @@
 #ifndef _CONSTANTES
 #define _CONSTANTES
 
+//les constantes liees aux commandes
+#define COMMANDE_M_DEFFI 0
+#define COMMANDE_M_CHOISIR 1
+#define COMMANDE_M_PRE 2
+
+#define COMMANDE_J_ACC 0
+#define COMMANDE_J_REC 1
+#define COMMANDE_J_TOU 2
+#define COMMANDE_J_FRE 3
+#define COMMANDE_J_DER 4
+#define COMMANDE_J_PAU 5
+#define COMMANDE_J_PERS 6
+
+#define TABLEAU_MENU 1
+#define TABLEAU_JEU 2
 
 //les constantes liees aux boutons de la manette
 #define BA 0
@@ -13,6 +28,11 @@
 #define START 7
 #define L3 8
 #define R3 9
+#define CROIX 100
+#define J_GAUCHE 101
+#define J_DROIT 104
+#define LT 102
+#define RT 105
 
 
 //les constantes liees aux axes de la manette
@@ -32,9 +52,11 @@
 #define FROTTEMENT_FLUIDE 500
 #define FROTTEMENT_SOLIDE 0.25
 #define TEMPS 30
-#define FORCE_MOTEUR_MAX 10000 //une F1 peut aller de 0 a 100km/h en 2s, d'où, avec sa masse, cette force moteur
+#define FORCE_MOTEUR_MAX 10000 //une F1 peut aller de 0 a 100km/h en 2s, d'oÃ¹, avec sa masse, cette force moteur
 #define FORCE_FREINAGE 5000
 #define VITESSE_MAX (FORCE_MOTEUR_MAX-MASSE*FROTTEMENT_SOLIDE*G)/FROTTEMENT_FLUIDE
+#define RUPTURE_PENTE_MAX M_PI/9
+#define TEMPS_SAUT_MIN 1.2
 
 //constantes liees aux voitures
 #define VOITURE_BLEUE 0
@@ -48,6 +70,9 @@
 #define ELEMENT_TROPHEE 2
 #define DEBUT_FLAG 3
 #define DEBUT_BALISE 6
+
+#define MILIEU_COUPE_X 199
+#define MILIEU_COUPE_Y 124
 
 //les constantes liees au score
 #define LETTRE_J 0
@@ -79,6 +104,9 @@
 #define EXPLICATION_4 20
 #define EXPLICATION_5 21
 #define EXPLICATION_6 22
+#define BOUTON_CAPTURE 23
+#define CONTOUR_SURLIGNAGE_ROUGE 24
+#define CONTOUR_SURLIGNAGE_VERT 25
 
 
 //la constante definissant le zoom maximal de la voiture.
@@ -97,6 +125,7 @@
 #define SON_DERAPAGE 3
 #define SON_CRASH 4
 #define SON_REBOND 5
+#define SON_VICTOIRE 6
 
 #define DUREE_MOTEUR 212
 #define DUREE_DERAPAGE 23
@@ -109,6 +138,7 @@
 #define CANAL_DERAPAGE 5
 #define CANAL_CRASH 8
 #define CANAL_REBOND 11
+#define CANAL_VICTOIRE 14
 
 #endif // _CONSTANTES
 
