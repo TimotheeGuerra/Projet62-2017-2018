@@ -6,10 +6,10 @@
 
 
 /**Alloue dinamiquement et en contigue une matrice d'entier de taille nl x nc */
-//int** alloueMatriceInt(int nl, int nc);
+int** alloueMatriceSanskinect(int nl, int nc);
 
 /**Libere l'espace memoire lie a la matrice d'entiers*/
-void libereMatriceInt(int** matrice);
+void libereMatriceSansKinect(int** matrice);
 
 /**permet la creation d'une pyramide centrals*/
 int** creeMatricePyramideCentrale(int nl, int nc, int niveau_sol, int niveau_pyramide, int pente_pyramide);
