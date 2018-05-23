@@ -1,7 +1,7 @@
 #include "Fonctions.h"
 
-
 void InitAll(CONTEXT* C, int *erreur){
+    FILE *E=fopen("CompteRendu_erreurs.txt","wt");
     SDL_DisplayMode resolution;
 
     Init_rand(); //peremt d'initialiser la fontion random
@@ -9,31 +9,35 @@ void InitAll(CONTEXT* C, int *erreur){
     //initialisation de la video et des joysticks
     if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK)<0){
         *erreur=-1;
-        return;
+        fprintf(E,"SDL_init error : %s\n",SDL_GetError());
+        fclose(E);return;
     }
 
     //initialisation de l'ecriture
     if(TTF_Init()!=0){
         *erreur=-2;
-        return;
+        fprintf(E,"TTF_init error : %s\n",TTF_GetError());
+        fclose(E);return;
     }
 
     //recuperation de la resolution de l'ecran
     if (SDL_GetDesktopDisplayMode(0,&resolution)!=0) {
         *erreur=-4;
-        return;
+        fprintf(E,"SDL resolution error : %s\n",SDL_GetError());
+        fclose(E);return;
     }
 
     if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1){
         *erreur=-5;
-        return;
+        fprintf(E,"Mix_Init error : %s\n",Mix_GetError());
+        fclose(E);return;
     }
     Mix_AllocateChannels(32); //alloue 32 canaux pour les sons, de 0 a 31
 
     //creation de l'ecran et de la fenetre de rendu pour le GPU
     C->sdlWindow=SDL_CreateWindow("Ma fenetre de jeu", SDL_WINDOWPOS_CENTERED , SDL_WINDOWPOS_CENTERED , resolution.w, resolution.h, SDL_WINDOW_FULLSCREEN_DESKTOP);
     C->sdlRenderer=SDL_CreateRenderer(C->sdlWindow, -1,  SDL_RENDERER_ACCELERATED);
-    SDL_SetRenderDrawColor(C->sdlRenderer, 0, 0, 0, 255); //ajuste la couleur du fond du rendu
+    SDL_SetRenderDrawColor(C->sdlRenderer, 255, 255, 255, 255); //ajuste la couleur du fond du rendu
 
     //resolution de l'ecran
     C->Xres=resolution.w;
@@ -43,23 +47,26 @@ void InitAll(CONTEXT* C, int *erreur){
     C->ecran=SDL_CreateRGBSurface(0, C->Xres, C->Yres, 32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
     if(C->ecran==NULL){
         *erreur=-3;
-        return;
+        fprintf(E,"Ecran init error : %s\n",SDL_GetError());
+        fclose(E);return;
     }
 
     //creation de la texture, dont le GPU a besoin, associee a l'ecran du CPU
-    C->sdlTexture=SDL_CreateTexture(C->sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 640, 480);
+    C->sdlTexture=SDL_CreateTexture(C->sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, C->Xres, C->Yres);
 
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");  // permet d'obtenir les redimensionnements plus doux.
 
     SDL_JoystickEventState(SDL_ENABLE); //permet la recuperation des evenements lies au joystick
 
     //charge toutes les images, les joysticks ...
+    fclose(E);
     LoadAll(C,erreur);
     return;
 }
 
 void LoadAll(CONTEXT *C,int *erreur){
     int i;
+    FILE *E=fopen("CompteRendu_erreurs.txt","wt");
 
     //different tableau contenant le chemin pour trouver les fichiers images
     char* voiture[]={"Voiture/BlueRaceCar.bmp","Voiture/GreenRaceCar.bmp","Voiture/RedRaceCar.bmp"};
@@ -72,12 +79,14 @@ void LoadAll(CONTEXT *C,int *erreur){
     "Menu/jeucerise.bmp","Menu/jeuflag.bmp","Menu/Pause_227_399.bmp","Menu/jeucourse.bmp",
     "Menu/aide.bmp","Menu/commandes.bmp", "Menu/detailPerspective.bmp",
     "Menu/Explication/1.jpg","Menu/Explication/2.jpg","Menu/Explication/3.jpg",
-    "Menu/Explication/4.jpg","Menu/Explication/5.jpg","Menu/Explication/6.jpg"};
+    "Menu/Explication/4.jpg","Menu/Explication/5.jpg","Menu/Explication/6.jpg",
+    "Menu/CaptureRelief.bmp","Menu/surlignagerouge.bmp","Menu/surlignagevert.bmp"};
     char* circuit[]={"Circuit/relief.bmp","Circuit/circuit_coeur.bmp"};
     char* score[]={"Score/J.bmp","Score/0.bmp","Score/1.bmp","Score/2.bmp","Score/3.bmp",
     "Score/4.bmp","Score/5.bmp","Score/6.bmp","Score/7.bmp","Score/8.bmp","Score/9.bmp",};
     char* son[]={"Bruitage/changement_position_joueur.wav", "Bruitage/racecar.wav",
-    "Bruitage/boutton.wav","Bruitage/derapage.wav","Bruitage/crash.WAV","Bruitage/rebond.wav"};
+    "Bruitage/boutton.wav","Bruitage/derapage.wav","Bruitage/crash.WAV","Bruitage/rebond.wav",
+    "Bruitage/victoire.wav"};
     char* musique[]={"Musique/musique1.mp3","Musique/musique2.mp3"};
 
     //calcul de differents nombres tres utiles pour la suite
@@ -110,30 +119,34 @@ void LoadAll(CONTEXT *C,int *erreur){
     C->joystick=malloc(C->nbjoystick*sizeof(SDL_Joystick*));
 
     C->sons=malloc(C->nbsons*sizeof(Mix_Chunk*));
-
     C->musique=malloc(C->nbmusique*sizeof(Mix_Music*));
 
     //gestion des erreurs liees aux allocation dynamiques
     if(C->S_voiture==NULL||C->S_menu==NULL||C->S_circuit==NULL||C->S_element==NULL||C->S_score==NULL){
         *erreur=-10;
-        return;
+        fprintf(E,"Probleme à l'allocation des tableaux de surfaces \n");
+        fclose(E); return;
     }
     if(C->T_voiture==NULL||C->T_menu==NULL||C->T_circuit==NULL||C->T_element==NULL||C->T_score==NULL){
         *erreur=-11;
-        return;
+        fprintf(E,"Probleme à l'allocation des tableaux de textures \n");
+        fclose(E); return;
     }
     if(C->joystick==NULL){
         *erreur=-12;
-        return;
+        fprintf(E,"Probleme à l'allocation des tableaux de joysticks \n");
+        fclose(E); return;
     }
     if(C->sons==NULL){
         *erreur=-14;
-        return;
+        fprintf(E,"Probleme à l'allocation des tableaux de sons \n");
+        fclose(E); return;
     }
 
     if(C->musique==NULL){
         *erreur=-15;
-        return;
+        fprintf(E,"Probleme à l'allocation des tableaux de musiques \n");
+        fclose(E); return;
     }
 
     //chargements des images de voitures dans les surfaces et creation des textures associees
@@ -141,13 +154,15 @@ void LoadAll(CONTEXT *C,int *erreur){
         C->S_voiture[i]=IMG_Load(voiture[i]);
         if(C->S_voiture[i]==NULL){ //gestion des erreurs liees au chargement d'image
             *erreur=-100-i;
-            return;
+            fprintf(E,"Probleme de chargements de la surface %s : %s\n",voiture[i],SDL_GetError());
         }
-        SDL_SetColorKey(C->S_voiture[i],SDL_TRUE,SDL_MapRGB(C->S_voiture[i]->format,255,0,0)); //defini une couleur transparente (celle du fond des images)
-        C->T_voiture[i]=SDL_CreateTextureFromSurface(C->sdlRenderer,C->S_voiture[i]);
-        if(C->T_voiture[i]==NULL){ //gestion des erreurs liees a la creation des textures
-            *erreur=-100-i;
-            return;
+        else{
+            SDL_SetColorKey(C->S_voiture[i],SDL_TRUE,SDL_MapRGB(C->S_voiture[i]->format,255,0,0)); //defini une couleur transparente (celle du fond des images)
+            C->T_voiture[i]=SDL_CreateTextureFromSurface(C->sdlRenderer,C->S_voiture[i]);
+            if(C->T_voiture[i]==NULL){ //gestion des erreurs liees a la creation des textures
+                *erreur=-100-i;
+                fprintf(E,"Probleme de creation de la texture %s : %s\n",voiture[i],SDL_GetError());
+            }
         }
     }
 
@@ -156,13 +171,15 @@ void LoadAll(CONTEXT *C,int *erreur){
         C->S_element[i]=IMG_Load(element_jeu[i]);
         if(C->S_element[i]==NULL){
             *erreur=-500-i;
-            return;
+            fprintf(E,"Probleme de creation de la surface %s : %s\n",element_jeu[i],SDL_GetError());
         }
-        SDL_SetColorKey(C->S_element[i],SDL_TRUE,SDL_MapRGB(C->S_element[i]->format,255,255,255));
-        C->T_element[i]=SDL_CreateTextureFromSurface(C->sdlRenderer,C->S_element[i]);
-        if(C->T_element[i]==NULL){
-            *erreur=-500-i;
-            return;
+        else{
+            SDL_SetColorKey(C->S_element[i],SDL_TRUE,SDL_MapRGB(C->S_element[i]->format,255,255,255));
+            C->T_element[i]=SDL_CreateTextureFromSurface(C->sdlRenderer,C->S_element[i]);
+            if(C->T_element[i]==NULL){
+                *erreur=-500-i;
+                fprintf(E,"Probleme de creation de la texture %s : %s\n",element_jeu[i],SDL_GetError());
+            }
         }
     }
 
@@ -171,28 +188,34 @@ void LoadAll(CONTEXT *C,int *erreur){
         C->S_menu[i]=IMG_Load(menu[i]);
         if(C->S_menu[i]==NULL){
             *erreur=-200-i;
-            return;
+            fprintf(E,"Probleme de creation de la surface %s : %s\n",menu[i],SDL_GetError());
         }
-        SDL_SetColorKey(C->S_menu[i],SDL_TRUE,SDL_MapRGB(C->S_menu[i]->format,255,255,255));
-        C->T_menu[i]=SDL_CreateTextureFromSurface(C->sdlRenderer,C->S_menu[i]);
-        if(C->T_menu[i]==NULL){
-            *erreur=-200-i;
-            return;
+        else{
+            SDL_SetColorKey(C->S_menu[i],SDL_TRUE,SDL_MapRGB(C->S_menu[i]->format,255,255,255));
+            C->T_menu[i]=SDL_CreateTextureFromSurface(C->sdlRenderer,C->S_menu[i]);
+            if(C->T_menu[i]==NULL){
+                *erreur=-200-i;
+                fprintf(E,"Probleme de creation de la texture %s : %s\n",menu[i],SDL_GetError());
+            }
         }
     }
+    SDL_SetTextureAlphaMod(C->T_menu[CONTOUR_SURLIGNAGE_ROUGE],100); //rend la texture semi-transparente
+    SDL_SetTextureAlphaMod(C->T_menu[CONTOUR_SURLIGNAGE_VERT],100);
 
     //chargements des images de circuits dans les surfaces et creation des textures associees
     for(i=0;i<C->nbcircuit;i++){
         C->S_circuit[i]=IMG_Load(circuit[i]);
         if(C->S_circuit[i]==NULL){
             *erreur=-300-i;
-            return;
+            fprintf(E,"Probleme de creation de la surface %s : %s\n",circuit[i],SDL_GetError());
         }
-        SDL_SetColorKey(C->S_circuit[i],SDL_TRUE,SDL_MapRGB(C->S_circuit[i]->format,255,0,0));
-        C->T_circuit[i]=SDL_CreateTextureFromSurface(C->sdlRenderer,C->S_circuit[i]);
-        if(C->T_circuit[i]==NULL){
-            *erreur=-300-i;
-            return;
+        else{
+            SDL_SetColorKey(C->S_circuit[i],SDL_TRUE,SDL_MapRGB(C->S_circuit[i]->format,255,0,0));
+            C->T_circuit[i]=SDL_CreateTextureFromSurface(C->sdlRenderer,C->S_circuit[i]);
+            if(C->T_circuit[i]==NULL){
+                *erreur=-300-i;
+                fprintf(E,"Probleme de creation de la texture %s : %s\n",circuit[i],SDL_GetError());
+            }
         }
     }
 
@@ -201,13 +224,15 @@ void LoadAll(CONTEXT *C,int *erreur){
         C->S_score[i]=IMG_Load(score[i]);
         if(C->S_score[i]==NULL){
             *erreur=-600-i;
-            return;
+            fprintf(E,"Probleme de creation de la surface %s : %s\n",score[i],SDL_GetError());
         }
-        SDL_SetColorKey(C->S_score[i],SDL_TRUE,SDL_MapRGB(C->S_score[i]->format,255,255,255));
-        C->T_score[i]=SDL_CreateTextureFromSurface(C->sdlRenderer,C->S_score[i]);
-        if(C->T_score[i]==NULL){
-            *erreur=-600-i;
-            return;
+        else{
+            SDL_SetColorKey(C->S_score[i],SDL_TRUE,SDL_MapRGB(C->S_score[i]->format,255,255,255));
+            C->T_score[i]=SDL_CreateTextureFromSurface(C->sdlRenderer,C->S_score[i]);
+            if(C->T_score[i]==NULL){
+                *erreur=-600-i;
+                fprintf(E,"Probleme de creation de la texture %s : %s\n",score[i],SDL_GetError());
+            }
         }
     }
 
@@ -216,7 +241,7 @@ void LoadAll(CONTEXT *C,int *erreur){
         C->joystick[i]=SDL_JoystickOpen(i);
         if(C->joystick[i]==NULL){ //gestion des erreurs liees a l'ouverture des manettes
             *erreur=-400-i;
-            return;
+            fprintf(E,"Probleme d'ouverture du joystick %d : %s\n",i,SDL_GetError());
         }
     }
 
@@ -225,7 +250,7 @@ void LoadAll(CONTEXT *C,int *erreur){
         C->sons[i]=Mix_LoadWAV(son[i]);
         if(C->sons[i]==NULL){ //gestion des erreurs liees au chargement des sons
             *erreur=-700-i;
-            return;
+            fprintf(E,"Probleme de chargement %s : %s\n",son[i],Mix_GetError());
         }
     }
 
@@ -234,17 +259,19 @@ void LoadAll(CONTEXT *C,int *erreur){
         C->musique[i]=Mix_LoadMUS(musique[i]);
         if(C->musique[i]==NULL){ //gestion des erreurs liees au chargement des sons
             *erreur=-800-i;
-            return;
+            fprintf(E,"Probleme de chargement %s : %s\n",musique[i],Mix_GetError());
         }
     }
 
     //chargement de la police d'ecriture
-    C->police=TTF_OpenFont("Timeless.ttf",15);
+    C->police=TTF_OpenFont("Timeless.ttf",35);
     if(C->police==NULL){ //gestion des erreurs liees au chargement de la police
         fprintf(stderr,"Impossible de charger \"Timeless.ttf\"");
         *erreur=-13;
-        return;
+        fprintf(E,"Probleme de chargement de Timeless.ttf : %s\n",TTF_GetError());
     }
+
+    fclose(E);
     return;
 }
 
@@ -277,6 +304,7 @@ int Release(CONTEXT *C){
     for(i=0;i<C->nbsons;i++){
         Mix_FreeChunk(C->sons[i]);
     }
+
     //liberation de toutes les musiques charges
     for(i=0;i<C->nbmusique;i++){
         Mix_FreeMusic(C->musique[i]);
@@ -293,15 +321,13 @@ int Release(CONTEXT *C){
     TTF_CloseFont(C->police);
 
     //liberation de la matrice de relief
-    libereMatriceInt(C->relief);
-
+    libereMatriceSansKinect(C->relief);
 
     //destruction des ecrans
     SDL_DestroyTexture(C->sdlTexture);
     SDL_DestroyRenderer(C->sdlRenderer);
     SDL_FreeSurface(C->ecran);
     SDL_DestroyWindow(C->sdlWindow);
-
     //fermeture de l'audio, de l'ecriture et de la video
     Mix_CloseAudio();
     TTF_Quit();
@@ -310,119 +336,79 @@ int Release(CONTEXT *C){
 }
 
 int gestion_erreur(CONTEXT C,int erreur){
-    FILE *E=fopen("CompteRendu_erreurs.txt","wt");
-
     int i;
     if(erreur==-1){
-        fprintf(E,"erreur d'initialisation video ou joystick!!!\n");
-        fclose(E);
         return 1;
     }
     else if(erreur==-2){
-        fprintf(E,"erreur d'initialisation TTF!!!\n");
-        fclose(E);
         return 1;
     }
     else if(erreur==-3){
-        fprintf(E,"erreur d'initialisation de l'ecran!!!\n");
-        fclose(E);
         return 1;
     }
     else if(erreur==-4){
-        fprintf(E,"Probleme a l'obtention de la resolution de l'ecran!!!\n");
-        fclose(E);
         return 1;
     }
     else if(erreur==-5){
-        fprintf(E,"erreur d'initialisation de la musique\n");
-        fclose(E);
         return 1;
     }
 
     else if(erreur==-10){
-        fprintf(E,"erreur de l'allocation d'un des tableaux de surfaces!!!\n");
-        fclose(E);
         return 1;
     }
     else if(erreur==-11){
-        fprintf(E,"erreur de l'allocation d'un des tableaux de textures!!!\n");
-        fclose(E);
         return 1;
     }
     else if(erreur==-12){
-        fprintf(E,"erreur de l'allocation du tableau de joysticks!!!\n");
-        fclose(E);
         return 1;
     }
     else if(erreur==-13){
-        fprintf(E,"erreur de chargement de la police!!!\n");
-        fclose(E);
         return 1;
     }
     else if(erreur==-14){
-        fprintf(E,"erreur de l'allocation du tableau de sons!!!\n");
-        fclose(E);
         return 1;
     }
     else if(erreur==-15){
-        fprintf(E,"erreur de l'allocation du tableau des musiques!!!\n");
-        fclose(E);
         return 1;
     }
     else{
         for(i=0;i<C.nbvoiture;i++){
             if(erreur==-100-i){
-                fprintf(E,"erreur de chargement de la voiture : %d!!!\n",i);
-                fclose(E);
                 return 1;
             }
         }
         for(i=0;i<C.nbmenu;i++){
             if(erreur==-200-i){
-                fprintf(E,"erreur de chargement du menu : %d!!!\n",i);
-                fclose(E);
                 return 1;
             }
         }
         for(i=0;i<C.nbcircuit;i++){
             if(erreur==-300-i){
-                fprintf(E,"erreur de chargement du circuit : %d!!!\n",i);
-                fclose(E);
                 return 1;
             }
         }
         for(i=0;i<C.nbjoystick;i++){
             if(erreur==-400-i){
-                fprintf(E,"erreur de chargement du joystick : %d!!!\n",i);
-                fclose(E);
                 return 1;
             }
         }
         for(i=0;i<C.nbelement;i++){
             if(erreur==-500-i){
-                fprintf(E,"erreur de chargement de l'element : %d!!!\n",i);
-                fclose(E);
                 return 1;
             }
         }
         for(i=0;i<C.nbscore;i++){
             if(erreur==-600-i){
-                fprintf(E,"erreur de chargement du score : %d!!!\n",i);
-                fclose(E);
                 return 1;
             }
         }
         for(i=0;i<C.nbscore;i++){
             if(erreur==-700-i){
-                fprintf(E,"erreur de chargement du son : %d!!!\n",i);
-                fclose(E);
                 return 1;
             }
         }
         for(i=0;i<C.nbmusique;i++){
             if(erreur==-800-i){
-                fprintf(E,"erreur de chargement de la musique : %d!!!\n",i);
-                fclose(E);
                 return 1;
             }
         }
@@ -433,15 +419,6 @@ int gestion_erreur(CONTEXT C,int erreur){
 void Init_rand(){
     //initialise la fonction random
     srand(time(NULL));
-}
-
-void mise_a(int valeur,Coordonnee *circuit,int taille){
-    //mat des coordonnees a la valeur souhaitee
-    int i;
-    for(i=0;i<taille;i++){
-        circuit[i].X=valeur;
-        circuit[i].Y=valeur;
-    }
 }
 
 int ReallocationJoystick(CONTEXT *C){
@@ -469,4 +446,48 @@ int ReallocationJoystick(CONTEXT *C){
         }
     }
     return C->nbjoystick;
+}
+
+void InitCommande(COMMANDE* manette){
+    manette->commande_menu[COMMANDE_M_DEFFI]=CROIX;
+    manette->commande_menu[COMMANDE_M_CHOISIR]=BA;
+    manette->commande_menu[COMMANDE_M_PRE]=BX;
+
+    manette->commande_jeu[COMMANDE_J_ACC]=RT;
+    manette->commande_jeu[COMMANDE_J_DER]=R1;
+    manette->commande_jeu[COMMANDE_J_FRE]=BX;
+    manette->commande_jeu[COMMANDE_J_PAU]=START;
+    manette->commande_jeu[COMMANDE_J_PERS]=CROIX;
+    manette->commande_jeu[COMMANDE_J_REC]=LT;
+    manette->commande_jeu[COMMANDE_J_TOU]=J_GAUCHE;
+
+}
+
+
+void InitVoiture(POSITION *voiture){
+    voiture->position_joueur=DERRIERE;
+    voiture->x=0;
+    voiture->y=0;
+    voiture->h=0;
+    voiture->w=0;
+    voiture->vitesse=0;
+    voiture->freinage=0;
+    voiture->derapage_av=0;
+    voiture->derapage=0;
+    voiture->rotation=0;
+    voiture->saut.etat=0;
+    voiture->saut.debut_saut=0;
+    voiture->saut.fin_saut=0;
+    voiture->saut.vo=0;
+    voiture->saut.zo=0;
+    voiture->alpha=0;
+    voiture->force_moteur=0;
+    voiture->virage=0;
+    voiture->rebondi=0;
+    voiture->compteur_rebond=0;
+    voiture->son.compteur_moteur=0;
+    voiture->son.compteur_derapage=0;
+    voiture->son.compteur_rebond=0;
+    voiture->son.compteur_crash=0;
+    InitCommande(&(voiture->manette));
 }
