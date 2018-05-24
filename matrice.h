@@ -15,12 +15,14 @@ void dessine_rectangle(SDL_Renderer* pRenderer,COUPLE haut_gauche,COUPLE haut_dr
 void est_dans_trapeze(int i,int j,COUPLE haut_gauche,COUPLE haut_droit,COUPLE bas_droit,
 		      COUPLE bas_gauche);
 void recupere_calibrage_manuel(COUPLE* haut_gauche,COUPLE* haut_droit,
-			       COUPLE* bas_droit,COUPLE* bas_gauche);
+			       COUPLE* bas_droit,COUPLE* bas_gauche);//interaction avec l utilisateur pour obtenir les coordones des bords du bac
 unsigned int** recopie_matrice(unsigned int** matrice,COUPLE haut_gauche,
-			       COUPLE haut_droit,COUPLE bas_droit,COUPLE bas_gauche);
+			       COUPLE haut_droit,COUPLE bas_droit,COUPLE bas_gauche);//rogne la matrice du kinect pour enlever les bords inutils (hors du bac ) 
 void calibrage_manuel(unsigned int** matrice, COUPLE* haut_gauche,COUPLE* haut_droit,
 		      COUPLE* bas_droit,COUPLE* bas_gauche);
 unsigned int** remplace_matrice(unsigned int** matrice,int nl_init,int nc_init,
 				int nl_cible,int nc_cible);
-unsigned int** retouche_matrice(unsigned int** matrice,int nl ,int nc);
-void completter_matrice(unsigned int** matrice_cible, unsigned int** matrice_marqueurs,int nl,int nc);
+unsigned int** retouche_matrice(unsigned int** matrice,int nl ,int nc);//renvoi une matrice ou les deformations optiques sont corrigees (trapeze en rectangle)
+void completter_matrice(unsigned int** matrice_cible, unsigned int** matrice_marqueurs,int nl,int nc);//prends une matrice incomplete et complete par interpolation ls points manquant 
+
+//voir pus de details dans les fichiers .c 
