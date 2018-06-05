@@ -321,7 +321,7 @@ int Release(CONTEXT *C){
     TTF_CloseFont(C->police);
 
     //liberation de la matrice de relief
-    libereMatriceSansKinect(C->relief);
+    libereMatrice(C->relief);
 
     //destruction des ecrans
     SDL_DestroyTexture(C->sdlTexture);
