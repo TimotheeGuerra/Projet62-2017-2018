@@ -465,7 +465,7 @@ void MenuOption(CONTEXT *C, POSITION *voiture, int joueur){
                 SDL_RenderClear(C->sdlRenderer);
             }
             else if(i==2){ //on veut recapturer le relief
-                C->relief=Initialisation_manuel_relief(C->Yres,C->Xres,C);
+                C->relief=initialisation_manuel_relief(C->Yres,C->Xres);
             }
             else{ //on veut quitter le menu option
                 return;
