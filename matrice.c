@@ -1,7 +1,7 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include<SDL2/SDL.h>
-#include"traitement.h"
+#include"Fonctions.h"
 #define MAXINT 65535
 
 unsigned int** alloueMatriceInt(int nl,int nc){
