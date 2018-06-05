@@ -109,7 +109,7 @@ void deroulement_course_joystick(CONTEXT *C,int* precedent){
             SDL_RenderClear(C->sdlRenderer); //destruction de l'ancienne ecran
 
             SDL_AffichageScore(*C,score); //fonction creee permettant d'afficher les scores grâces a des images BMP
-            SDL_RenderCopy(C->sdlRenderer, C->T_circuit[1], NULL, NULL); //copie du circuit
+            //SDL_RenderCopy(C->sdlRenderer, C->T_circuit[0], NULL, NULL); //copie du circuit
             for(i=0;i<C->nbjoueur;i++){ //affichage de toutes les voitures
                 SDL_RenderCopyEx(C->sdlRenderer,C->T_voiture[i],NULL,&positionV[i],rot_graphique[i],NULL,SDL_FLIP_NONE); //fait tourner la texture dans le sens horaire.
             }
