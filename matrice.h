@@ -1,5 +1,5 @@
 #include<SDL2/SDL.h>
-#include"traitement.h"
+#include"Fonctions.h"
 #define maxint 65535
 
 unsigned int** alloueMatriceInt(int nl,int nc);
