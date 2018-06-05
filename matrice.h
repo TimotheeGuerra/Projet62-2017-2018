@@ -12,7 +12,7 @@ int indice_min(int* tab,int debut,int fin);
 void visualise_image_kinect(unsigned int** matrice,COUPLE p1,COUPLE p2);
 void dessine_rectangle(SDL_Renderer* pRenderer,COUPLE haut_gauche,COUPLE haut_droit,
 		       COUPLE bas_droit,COUPLE bas_gauche);
-void est_dans_trapeze(int i,int j,COUPLE haut_gauche,COUPLE haut_droit,COUPLE bas_droit,
+int est_dans_trapeze(int i,int j,COUPLE haut_gauche,COUPLE haut_droit,COUPLE bas_droit,
 		      COUPLE bas_gauche);
 void recupere_calibrage_manuel(COUPLE* haut_gauche,COUPLE* haut_droit,
 			       COUPLE* bas_droit,COUPLE* bas_gauche);//interaction avec l utilisateur pour obtenir les coordones des bords du bac
