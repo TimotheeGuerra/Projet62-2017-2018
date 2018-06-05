@@ -11,6 +11,18 @@
 #include<SDL2/SDL_mixer.h>
 
 typedef struct{
+    int l;
+    int c;
+}
+COUPLE;
+
+typedef struct{
+    int inf;
+    int sup;
+}
+BORNES;
+
+typedef struct{
     int commande_menu[3];
     int commande_jeu[6];
 }/**Contient les tableaux concernant les commandes du jeu*/
@@ -126,7 +138,11 @@ typedef struct{
     int Yres;
     /**matrice d'entier contenant le relief*/
     int** relief;
-
+	
+    COUPLE haut_gauche;
+COUPLE haut_droit;
+COUPLE bas_droit;
+COUPLE bas_gauche;
     COMMANDE manette[3];
 } /**contient toutes les informations dont on peut avoir besoin sur le jeu en general*/
 CONTEXT;
@@ -221,17 +237,6 @@ typedef struct{
 }/**contient toutes les information sur un flag dont on peut avoir besoin*/
 INFOSFLAG;
 
-typedef struct{
-    int l;
-    int c;
-}
-COUPLE;
-
-typedef struct{
-    int inf;
-    int sup;
-}
-BORNES;
 
 #endif // _STRUCTURE
 
