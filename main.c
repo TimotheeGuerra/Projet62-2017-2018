@@ -9,7 +9,7 @@ int main ( int argc, char *argv[] ){
 	SDL_GetDesktopDisplayMode(0,&resolution);
 	printf("%d %d\n",resolution.h,resolution.w);
 
-    C.relief=initialisation_manuel_relief(resolution.h,resolution.w);
+    C.relief=initialisation_manuel_relief(resolution.h,resolution.w,&C);
 
 
     InitAll(&C,&erreur_init); //Initialise tout
