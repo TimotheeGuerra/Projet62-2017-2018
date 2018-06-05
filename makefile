@@ -11,7 +11,7 @@ install_all:
 	sudo apt-get install libusb-1.0-0-dev
 	make SlotTrack.exe
 
-SlotTrack.exe: Collision.o CreationRelief.o FonctionsGenerales.o GestionEvent.o GestionInstruction.o GestionMenus.o GestionMusique.o GestionVoiture.o InitialisationEtFin.o JeuCerise.o JeuCourse.o JeuPriseFlag.o main.o Modelisation.o ObtenirCouleur.o traitement.o calibrage.o matrice.o acquisition.o
+SlotTrack.exe: Collision.o FonctionsGenerales.o GestionEvent.o GestionInstruction.o GestionMenus.o GestionMusique.o GestionVoiture.o InitialisationEtFin.o JeuCerise.o JeuCourse.o JeuPriseFlag.o main.o Modelisation.o ObtenirCouleur.o traitement.o calibrage.o matrice.o acquisition.o
 	gcc $^ -o SlotTrack.exe $(CFLAGS) $(LDFLAGS) -lm
 
 %.o: %.c 
