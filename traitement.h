@@ -1,7 +1,5 @@
 #ifndef _TRAITEMENT
 #define _TRAITEMENT
-typedef struct{int l;int c;} COUPLE;
-typedef struct{int inf;int sup;} BORNES;
 
 int nb_erreurs_image(unsigned int** matrice);
 //Compte le nombre de pixel aberrants dans la matrice
