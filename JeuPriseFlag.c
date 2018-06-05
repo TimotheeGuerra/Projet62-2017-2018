@@ -137,7 +137,7 @@ void deroulement_flag_joystick(CONTEXT *C,int *precedent){
         SDL_RenderClear(C->sdlRenderer); //nettoye l'ecran des textures precedentes
 
         SDL_AffichageScore(*C,score);
-        SDL_RenderCopy(C->sdlRenderer, C->T_circuit[0], NULL, NULL); //affiche le decor
+        //SDL_RenderCopy(C->sdlRenderer, C->T_circuit[0], NULL, NULL); //affiche le decor
         for(i=0;i<C->nbjoueur;i++){ //affiche toutes les balises
             SDL_RenderCopy(C->sdlRenderer, C->T_element[i+DEBUT_BALISE], NULL, &(positionBalise[i])); //affiche les flags
         }
