@@ -155,7 +155,7 @@ void deroulement_cerise_joystick(CONTEXT *C,int* precedent){
             SDL_RenderClear(C->sdlRenderer); //destruction de l'ancienne ecran
 
             SDL_AffichageScore(*C,score); //fonction creee permettant d'afficher les scores grâces a des images BMP
-            SDL_RenderCopy(C->sdlRenderer, C->T_circuit[0], NULL, NULL); //copie du relief
+            //SDL_RenderCopy(C->sdlRenderer, C->T_circuit[0], NULL, NULL); //copie du relief
             for(i=0;i<NB_CERISE;i++){
                 if(prise[i]==0){ //si la cerise n'a pas ete prise, il faut l'afficher
                     SDL_RenderCopy(C->sdlRenderer, C->T_element[ELEMENT_CERISE+i], NULL, &positionCerise);
