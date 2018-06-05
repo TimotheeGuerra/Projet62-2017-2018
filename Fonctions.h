@@ -12,7 +12,6 @@
 
 #include "Constantes.h"
 #include "Structures.h"
-#include "Relief.h"
 #include "matrice.h"
 #include "traitement.h"
 #include "acquisition.h"
